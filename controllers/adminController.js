@@ -1,0 +1,230 @@
+const User = require('../models/userModel');
+const bcrypt = require('bcrypt');
+const randomString = require('randomstring');
+const config = require('../config/config')
+
+const securePassword = async(password)=>{
+    try {
+        const passwordHash = await bcrypt.hash(password,10);
+        return passwordHash;
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+
+// Load the login page
+const loadLogin = async (req, res) => {
+    try {
+        res.render('login');
+    } catch (error) {
+        console.error('Error loading login page:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+// Verify login credentials
+const verifyLogin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const userData = await User.findOne({ email: email });
+
+        if (userData) {
+            const passwordMatch = await bcrypt.compare(password, userData.password);
+
+            if (passwordMatch) {
+                if (userData.is_admin === 1) {
+                    req.session.user_id = userData._id; // Store user ID in session
+                    return res.redirect('/admin/home'); // Redirect to admin home
+                } else {
+                    return res.render('login', { message: 'You do not have admin privileges' });
+                }
+            } else {
+                return res.render('login', { message: 'Email or password is incorrect' });
+            }
+        } else {
+            return res.render('login', { message: 'Email or password is incorrect' });
+        }
+    } catch (error) {
+        console.error('Error verifying login:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+// Load admin dashboard
+const loadDashboard = async (req, res) => {
+    try {
+        const userData = await User.findById(req.session.user_id);
+        res.render('home', { admin: userData });
+    } catch (error) {
+        console.error('Error loading dashboard:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+
+// Admin authentication middleware
+const isAdmin = async (req, res, next) => {
+    try {
+        const userId = req.session.user_id;
+
+        if (!userId) {
+            return res.redirect('/admin'); // Redirect to admin login if not logged in
+        }
+
+        const user = await User.findById(userId);
+        if (user && user.is_admin === 1) {
+            next(); // Proceed if the user is an admin
+        } else {
+            return res.redirect('/home'); // Redirect to user home if user is not an admin
+        }
+    } catch (error) {
+        console.error('Admin authentication error:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+// Logout functionality
+const logout = async (req, res) => {
+    try {
+        req.session.destroy();
+        res.redirect('/admin');
+    } catch (error) {
+        console.error('Error logging out:', error.message);
+    }
+};
+
+const adminDashboard = async(req,res)=>{
+
+    try {
+        const usersData = await User.find({is_admin:0})
+        res.render('dashboard',{users:usersData});
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+const newUserLoad = async(req,res)=>{
+
+    try {
+        res.render('new-user')
+    } catch (error) {
+        console.log(error.message)
+    }
+}
+
+const addUser = async (req, res) => {
+    try {
+        const { name, email, mno } = req.body;
+        const image = req.file ? req.file.filename : ''; // Handle file upload
+        const password = randomString.generate(8);
+
+        // Validate required fields
+        if (!name || !email || !mno || !image) {
+            return res.render('new-user', { message: 'All fields are required' });
+        }
+
+        // Check if the email or mobile already exists
+        const existingUser = await User.findOne({ $or: [{ email }, { mobile: mno }] });
+        if (existingUser) {
+            return res.render('new-user', { message: 'Email or mobile number already in use' });
+        }
+
+        const spassword = await securePassword(password);
+
+        const user = new User({
+            name: name,
+            email: email,
+            mobile: mno,
+            image: image,
+            password: spassword,
+            is_admin: 0 // Default to non-admin
+        });
+
+        const userData = await user.save(); 
+
+        if (userData) {
+            res.render('new-user', { message: 'New user added successfully' });
+        } else {
+            res.render('new-user', { message: 'Something went wrong, please try again' });
+        }
+    } catch (error) {
+        console.error('Error adding user:', error.message);
+        res.render('new-user', { message: 'An error occurred while adding the user' });
+    }
+};
+
+//edit user
+
+const editUserLoad = async (req, res) => {
+    try {
+        const id = req.query.id; // or req.params.id if using route parameters
+        const userData = await User.findById(id); // Correct usage of findById
+
+        if (userData) {
+            res.render('edit-user', { user: userData });
+        } else {
+            res.redirect('/admin/dashboard'); // Redirect if user not found
+        }
+    } catch (error) {
+        console.error('Error loading edit user page:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+const updateUser = async (req, res) => {
+    try {
+        // Get user ID from request body
+        const userId = req.body.id;
+        
+        // Prepare update data from request body
+        const updateData = {
+            name: req.body.name,
+            email: req.body.email,
+            mobile: req.body.mno,
+        };
+
+        // Check if a new image file is uploaded
+        if (req.file) {
+            updateData.image = req.file.filename; // Update with new image filename
+        }
+
+        // Find and update user by ID
+        const userData = await User.findByIdAndUpdate(userId, { $set: updateData }, { new: true });
+
+        if (userData) {
+            res.redirect('/admin/dashboard'); // Redirect to dashboard on success
+        } else {
+            res.redirect('/admin/dashboard'); // Redirect to dashboard if user not found
+        }
+    } catch (error) {
+        console.log('Error updating user:', error.message);
+        res.status(500).send('Internal Server Error'); // Send internal server error if an exception occurs
+    }
+};
+
+const deleteUser = async (req, res) => {
+    try {
+        const id = req.query.id;
+        await User.deleteOne({ _id: id });
+        const usersData = await User.find({ is_admin: 0 });
+        res.render('dashboard', { users: usersData, message: 'User deleted successfully' });
+    } catch (error) {
+        console.log('Error deleting user:', error.message);
+        res.status(500).send('Internal Server Error');
+    }
+};
+
+module.exports = {
+    loadLogin,
+    verifyLogin,
+    loadDashboard,
+    isAdmin,
+    logout,
+    adminDashboard,
+    newUserLoad,
+    addUser,
+    editUserLoad,
+    updateUser,
+    deleteUser,
+};

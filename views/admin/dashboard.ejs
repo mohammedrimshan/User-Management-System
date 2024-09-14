@@ -1,0 +1,42 @@
+<div class="container">
+    <h1>Admin Dashboard</h1>
+
+    <a href="/admin/new-user" class="add-new">Add New User</a>
+
+    <table>
+        <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone No</th>
+            <th colspan="2">Action</th>
+        </tr>
+
+        <% if (users.length > 0) { %>
+            <% for (let i = 0; i < users.length; i++) { %>
+            <tr>
+                <td>
+                    <img src="/userImages/<%= users[i].image %>" alt="<%= users[i].image %>">
+                </td>
+                <td><%= users[i].name %></td>
+                <td><%= users[i].email %></td>
+                <td><%= users[i].mobile %></td>
+                <td class="action-links">
+                    <a href="/admin/edit-user?id=<%= users[i]._id %>">Edit</a>
+                    <a href="/admin/delete-user?id=<%= users[i]._id %>" class="delete">Delete</a>
+                </td>
+            </tr>
+            <% } %>
+        <% } else { %>
+            <tr>
+                <td colspan="6" class="no-users">User not found</td>
+            </tr>
+        <% } %>
+    </table>
+    <% if (typeof message !== 'undefined' && message) { %>
+        <div class="alert alert-success">
+            <%= message %>
+        </div>
+    <% } %>
+    <a href="/admin/home" class="back-home">Go To Home</a>
+</div>

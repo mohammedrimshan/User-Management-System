@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles/form/edituser.css" />
+</head>
+<body>
+
+<div class="container">
+    <h1>Edit User</h1>
+
+    <form action="/admin/edit-user" method="post" enctype="multipart/form-data">
+        <input type="hidden" name="id" value="<%= user._id %>">
+        <input type="text" name="name" placeholder="Enter name" value="<%= user.name %>" required>
+        <input type="email" name="email" placeholder="Enter email" value="<%= user.email %>" required>
+        <input type="text" name="mno" placeholder="Enter mobile" value="<%= user.mobile %>" required>
+        <input type="file" name="image">
+        <input type="submit" value="UPDATE">
+    </form>
+
+    <a href="/admin/dashboard" class="back-link">Go To Dashboard</a>
+</div>
+
+</body>
+</html>

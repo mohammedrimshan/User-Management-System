@@ -1,0 +1,17 @@
+<body>
+    <div class="container">
+        <h1>Edit Info</h1>
+        <div class="profile-img">
+            <img src="userImages/<%= user.image %>" width="100px" height="100px" alt="<%= user.image %>">
+        </div>
+        <form action="" method="post" enctype="multipart/form-data">
+            <input type="text" name="name" value="<%= user.name %>" placeholder="Enter your name" required>
+            <input type="email" name="email" value="<%= user.email %>" placeholder="Enter your email" required>
+            <input type="text" name="mno" value="<%= user.mobile %>" placeholder="Enter your mobile number" required>
+            <input type="hidden" name="user_id" value="<%= user._id %>">
+            <input type="submit" value="Update User">
+        </form>
+        <div class="actions">
+            <a href="/home">Go to Home</a>
+        </div>
+    </div>
