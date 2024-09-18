@@ -33,10 +33,20 @@
             </tr>
         <% } %>
     </table>
-    <% if (typeof message !== 'undefined' && message) { %>
-        <div class="alert alert-success">
+
+    <% if (message) { %>
+        <div class="alert alert-info" style="color: rgb(1, 175, 9);">
             <%= message %>
         </div>
+        <script>
+            // Remove the query string from the URL after the message is shown
+            if (window.history.replaceState) {
+                const url = new URL(window.location);
+                url.searchParams.delete('message'); // Remove 'message' query parameter
+                window.history.replaceState(null, '', url);
+            }
+        </script>
     <% } %>
+
     <a href="/admin/home" class="back-home">Go To Home</a>
 </div>

@@ -8,37 +8,45 @@ body {
     justify-content: center;
     height: 100vh;
 }
+
 .login-container {
     background-color: #fff;
-    padding: 20px;
+    padding: 30px; /* Increased padding for more space */
     border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     width: 100%;
-    max-width: 400px;
+    max-width: 450px; /* Slightly wider max width */
     text-align: center;
 }
+
 h1 {
     color: #333;
-    margin-bottom: 20px;
+    margin-bottom: 25px; /* Increased margin for better spacing */
 }
+
 h4 {
     color: #dc3545;
     margin-bottom: 20px;
 }
+
 form {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 18px; /* Increased gap for more space between inputs */
 }
+
 input[type="email"],
 input[type="password"] {
-    padding: 10px;
+    padding: 12px; /* Increased padding inside input fields */
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 16px;
+    width: 100%; /* Ensure the input fields are full width */
+    box-sizing: border-box; /* Avoid padding affecting width */
 }
+
 input[type="submit"] {
-    padding: 10px;
+    padding: 12px;
     background-color: #007bff;
     color: white;
     border: none;
@@ -46,6 +54,43 @@ input[type="submit"] {
     cursor: pointer;
     font-size: 16px;
 }
+
 input[type="submit"]:hover {
     background-color: #0056b3;
+}
+
+.input-grp {
+    text-align: left; /* Align error messages and input fields */
+}
+
+span {
+    font-size: 14px;
+}
+.input-grp span i {
+    color: green;
+    position: relative;
+}
+
+/* Additional Media Query for Smaller Screens */
+@media (max-width: 480px) {
+    .container {
+        padding: 20px;
+    }
+
+    h1 {
+        font-size: 20px;
+    }
+
+    input[type="email"],
+    input[type="password"] {
+        font-size: 14px;
+    }
+
+    input[type="submit"] {
+        font-size: 14px;
+    }
+
+    .links a {
+        font-size: 12px;
+    }
 }

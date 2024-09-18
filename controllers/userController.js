@@ -12,21 +12,57 @@ const securePassword = async (password) => {
 
 const loadRegister = async (req, res) => {
     try {
-        res.render('registration');
+        const message = req.query.message || '';  // Retrieve message from query, default to empty string if not present
+        res.render('registration', { message });  // Pass message to the registration template
     } catch (error) {
         console.log(error.message);
     }
 };
 
+
+// const createUser = async (req, res) => {
+//     try {
+//         const { email, mno, password } = req.body;
+
+//         // Check if a user with the same email or mobile already exists
+//         const existingUser = await User.findOne({ $or: [{ email }, { mobile:mno }] });
+
+//         if (existingUser) {
+//             return res.render('registration', { message: 'User with this email or mobile already exists' });
+//         }
+
+//         // Hash the password
+//         const spassword = await securePassword(password);
+
+//         // Create a new user if no duplicates are found
+//         const user = new User({
+//             name: req.body.name,
+//             email: email,
+//             mobile: mno,
+//             image: req.file.filename,
+//             password: spassword,
+//             is_admin: 0
+//         });
+
+//         const userData = await user.save();
+//         if (userData) {
+//             return res.render('registration', { message: 'Your registration has been successfully completed.' });
+//         } else {
+//             return res.render('registration', { message: 'Your registration has failed.' });
+//         }
+//     } catch (error) {
+//         console.log(error.message);
+//     }
+// };
 const createUser = async (req, res) => {
     try {
         const { email, mno, password } = req.body;
 
         // Check if a user with the same email or mobile already exists
-        const existingUser = await User.findOne({ $or: [{ email }, { mobile:mno }] });
+        const existingUser = await User.findOne({ $or: [{ email }, { mobile: mno }] });
 
         if (existingUser) {
-            return res.render('registration', { message: 'User with this email or mobile already exists' });
+            return res.redirect(`/register?message=User with this email or mobile already exists`);
         }
 
         // Hash the password
@@ -44,9 +80,9 @@ const createUser = async (req, res) => {
 
         const userData = await user.save();
         if (userData) {
-            return res.render('registration', { message: 'Your registration has been successfully completed.' });
+            return res.redirect(`/register?message=Your registration has been successfully completed.`);
         } else {
-            return res.render('registration', { message: 'Your registration has failed.' });
+            return res.redirect(`/register?message=Your registration has failed.`);
         }
     } catch (error) {
         console.log(error.message);
@@ -56,9 +92,12 @@ const createUser = async (req, res) => {
 // Login user
 const loginLoad = async (req, res) => {
     try {
-        res.render('login');
+        const message = req.session.message; // Get any message from the session
+        req.session.message = null; // Clear the message after displaying it
+        res.render('login', { message }); // Pass the message to the EJS template
     } catch (error) {
         console.log(error.message);
+        return res.status(500).send('Internal Server Error');
     }
 };
 
@@ -70,20 +109,20 @@ const verifyLogin = async (req, res) => {
         if (userData) {
             const passwordMatch = await bcrypt.compare(password, userData.password);
             if (passwordMatch) {
-                // Check if the user is an admin
                 if (userData.is_admin === 1) {
-                    // Admin trying to login from user page, redirect to admin login page
-                    return res.render('login', { message: 'Invalid credentials for user login.' });
+                    req.session.message = 'Invalid credentials for user login.';
+                    return res.redirect('/login');
                 } else {
-                    // Normal user login
                     req.session.user_id = userData._id;
-                    return res.redirect('/home'); // User home page
+                    return res.redirect('/home');
                 }
             } else {
-                return res.render('login', { message: 'Email or password incorrect.' });
+                req.session.message = 'Email or password incorrect.';
+                return res.redirect('/login');
             }
         } else {
-            return res.render('login', { message: 'Email or password incorrect.' });
+            req.session.message = 'Email or password incorrect.';
+            return res.redirect('/login');
         }
     } catch (error) {
         console.log(error.message);
@@ -99,7 +138,10 @@ const userLogout = async (req, res) => {
                 console.log(err.message);
                 return res.status(500).send('Internal Server Error');
             }
-            res.clearCookie('connect.sid'); // Clear the session cookie
+            // Clear the session cookie with the correct domain and path
+            res.clearCookie('connect.sid', { path: '/', domain: 'localhost' });
+
+            // Redirect the user to the login page
             res.redirect('/login');
         });
     } catch (error) {
@@ -107,6 +149,7 @@ const userLogout = async (req, res) => {
         return res.status(500).send('Internal Server Error');
     }
 };
+
 
 const loadHome = async (req, res) => {
     try {

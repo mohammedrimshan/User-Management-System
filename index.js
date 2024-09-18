@@ -15,7 +15,7 @@ app.use(session({
     secret: customConfig.sessionSecret, // Replace with your secret
     resave: false,
     saveUninitialized: false,
-    // cookie: { maxAge: 60000 }
+    // cookie: { maxAge: 1000 } // Session expires after 1 seconds
 }));
 
 // Connect to MongoDB
@@ -37,6 +37,15 @@ app.use('/', userRoute);
 
 const adminRoute = require('./routes/adminRoute');
 app.use('/admin', adminRoute);
+
+app.use('*', (req, res) => {
+    res.status(404).render('error', {
+        title: "Page Not Found",
+        message: "Sorry, the page you're looking for doesn't exist.",
+        errorCode: 404,
+        layout: false // Disable layout for error pages
+    });
+});
 
 // Start server
 const PORT = process.env.PORT || 3005;

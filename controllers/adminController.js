@@ -94,65 +94,112 @@ const logout = async (req, res) => {
     }
 };
 
-const adminDashboard = async(req,res)=>{
-
+const adminDashboard = async (req, res) => {
     try {
-        const usersData = await User.find({is_admin:0})
-        res.render('dashboard',{users:usersData});
-    } catch (error) {
-        console.log(error.message)
-    }
-}
+        const usersData = await User.find({ is_admin: 0 });
 
-const newUserLoad = async(req,res)=>{
+        // Check if there's a message in query parameters
+        const message = req.query.message || null; // You can also use `req.session.message` if using sessions
 
-    try {
-        res.render('new-user')
+        // Pass message to the view
+        res.render('dashboard', {
+            users: usersData,
+            message: message // Pass message to the EJS template
+        });
     } catch (error) {
-        console.log(error.message)
+        console.log(error.message);
+        res.status(500).send('Internal Server Error');
     }
-}
+};
+
+
+// Controller method to render the new-user page
+const newUserLoad = (req, res) => {
+    const message = req.query.message;  // Extract the 'message' from query parameters
+    res.render('new-user', { message });  // Pass the message to the template
+};
+
+
+// const addUser = async (req, res) => {
+//     try {
+//         const { name, email, mno } = req.body;
+//         const image = req.file ? req.file.filename : ''; // Handle file upload
+//         const password = randomString.generate(8);
+
+//         // Validate required fields
+//         if (!name || !email || !mno || !image) {
+//             return res.render('new-user', { message: 'All fields are required' });
+//         }
+
+//         // Check if the email or mobile already exists
+//         const existingUser = await User.findOne({ $or: [{ email }, { mobile: mno }] });
+//         if (existingUser) {
+//             return res.render('new-user', { message: 'Email or mobile number already in use' });
+//         }
+
+//         const spassword = await securePassword(password);
+
+//         const user = new User({
+//             name: name,
+//             email: email,
+//             mobile: mno,
+//             image: image,
+//             password: spassword,
+//             is_admin: 0 // Default to non-admin
+//         });
+
+//         const userData = await user.save(); 
+
+//         if (userData) {
+//             res.render('new-user', { message: 'New user added successfully' });
+//         } else {
+//             res.render('new-user', { message: 'Something went wrong, please try again' });
+//         }
+//     } catch (error) {
+//         console.error('Error adding user:', error.message);
+//         res.render('new-user', { message: 'An error occurred while adding the user' });
+//     }
+// };
+
 
 const addUser = async (req, res) => {
     try {
         const { name, email, mno } = req.body;
-        const image = req.file ? req.file.filename : ''; // Handle file upload
+        const image = req.file ? req.file.filename : '';
         const password = randomString.generate(8);
 
-        // Validate required fields
         if (!name || !email || !mno || !image) {
-            return res.render('new-user', { message: 'All fields are required' });
+            return res.redirect(`/admin/new-user?message=All fields are required`);
         }
 
-        // Check if the email or mobile already exists
         const existingUser = await User.findOne({ $or: [{ email }, { mobile: mno }] });
         if (existingUser) {
-            return res.render('new-user', { message: 'Email or mobile number already in use' });
+            return res.redirect(`/admin/new-user?message=Email or mobile number already in use`);
         }
 
         const spassword = await securePassword(password);
 
         const user = new User({
-            name: name,
-            email: email,
+            name,
+            email,
             mobile: mno,
-            image: image,
+            image,
             password: spassword,
-            is_admin: 0 // Default to non-admin
+            is_admin: 0,
         });
 
-        const userData = await user.save(); 
-
+        const userData = await user.save();
         if (userData) {
-            res.render('new-user', { message: 'New user added successfully' });
+            return res.redirect(`/admin/new-user?message=New user added successfully`);
         } else {
-            res.render('new-user', { message: 'Something went wrong, please try again' });
+            return res.redirect(`/admin/new-user?message=Something went wrong, please try again`);
         }
     } catch (error) {
         console.error('Error adding user:', error.message);
-        res.render('new-user', { message: 'An error occurred while adding the user' });
+        return res.redirect(`/admin/new-user?message=An error occurred while adding the user`);
     }
 };
+
 
 //edit user
 
@@ -172,48 +219,91 @@ const editUserLoad = async (req, res) => {
     }
 };
 
+// const updateUser = async (req, res) => {
+//     try {
+//         // Get user ID from request body
+//         const userId = req.body.id;
+        
+//         // Prepare update data from request body
+//         const updateData = {
+//             name: req.body.name,
+//             email: req.body.email,
+//             mobile: req.body.mno,
+//         };
+
+//         // Check if a new image file is uploaded
+//         if (req.file) {
+//              updateData.image = req.file.filename; // Update with new image filename
+//         }
+
+//         // Find and update user by ID
+//         const userData = await User.findByIdAndUpdate(userId, { $set: updateData }, { new: true });
+
+//         if (userData) {
+//             res.redirect('/admin/dashboard'); // Redirect to dashboard on success
+//         } else {
+//             res.redirect('/admin/dashboard'); // Redirect to dashboard if user not found
+//         }
+//     } catch (error) {
+//         console.log('Error updating user:', error.message);
+//         res.status(500).send('Internal Server Error'); // Send internal server error if an exception occurs
+//     }
+// };
+
+
 const updateUser = async (req, res) => {
     try {
-        // Get user ID from request body
         const userId = req.body.id;
-        
-        // Prepare update data from request body
+
         const updateData = {
             name: req.body.name,
             email: req.body.email,
             mobile: req.body.mno,
         };
 
-        // Check if a new image file is uploaded
         if (req.file) {
-            updateData.image = req.file.filename; // Update with new image filename
+            updateData.image = req.file.filename;
         }
 
-        // Find and update user by ID
         const userData = await User.findByIdAndUpdate(userId, { $set: updateData }, { new: true });
 
         if (userData) {
-            res.redirect('/admin/dashboard'); // Redirect to dashboard on success
+            res.redirect(`/admin/dashboard?message=User updated successfully`);
         } else {
-            res.redirect('/admin/dashboard'); // Redirect to dashboard if user not found
+            res.redirect(`/admin/dashboard?message=User not found`);
         }
     } catch (error) {
         console.log('Error updating user:', error.message);
-        res.status(500).send('Internal Server Error'); // Send internal server error if an exception occurs
+        res.redirect(`/admin/dashboard?message=An error occurred while updating the user`);
     }
 };
+
+
+// const deleteUser = async (req, res) => {
+//     try {
+//         const id = req.query.id;
+//         await User.deleteOne({ _id: id });
+//         const usersData = await User.find({ is_admin: 0 });
+//         res.render('dashboard', { users: usersData, message: 'User deleted successfully' });
+//     } catch (error) {
+//         console.log('Error deleting user:', error.message);
+//         res.status(500).send('Internal Server Error');
+//     }
+// };
 
 const deleteUser = async (req, res) => {
     try {
         const id = req.query.id;
         await User.deleteOne({ _id: id });
-        const usersData = await User.find({ is_admin: 0 });
-        res.render('dashboard', { users: usersData, message: 'User deleted successfully' });
+
+        // Redirect to dashboard with success message
+        res.redirect('/admin/dashboard?message=User deleted successfully');
     } catch (error) {
         console.log('Error deleting user:', error.message);
         res.status(500).send('Internal Server Error');
     }
 };
+
 
 module.exports = {
     loadLogin,

@@ -2,11 +2,22 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const multer = require('multer');
+const session = require('express-session');  // Add this line
 const userController = require('../controllers/userController');
 const auth = require('../middleware/auth');
 const nocache = require('nocache');
+const config = require('../config/config');  // Make sure this path is correct
 
 const user_route = express();
+
+user_route.use(session({
+    secret: config.sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 1000 }
+}));
+
+
 
 // Apply nocache middleware to prevent caching
 user_route.use(nocache());
@@ -31,10 +42,21 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // Routes
-user_route.get('/register', auth.islogout, userController.loadRegister);
+// user_route.get('/register', auth.islogout, userController.loadRegister);
+user_route.get('/register', auth.islogout, userController.loadRegister, (req, res) => {
+    const message = req.query.message || '';
+    res.render('registration', { message });
+});
+
 user_route.post('/register', upload.single('image'), userController.createUser);
 user_route.get('/', auth.islogout, userController.loginLoad);
-user_route.get('/login', auth.islogout, userController.loginLoad);
+// user_route.get('/login', auth.islogout, userController.loginLoad);
+user_route.get('/login', auth.islogout,userController.loginLoad, (req, res) => {
+    const message = req.session.message; // Get the message from session
+    req.session.message = null; // Clear the message after displaying it
+    res.render('login', { message }); // Pass the message to the EJS template
+});
+
 user_route.post('/login', userController.verifyLogin);
 user_route.get('/home', auth.islogin, userController.isUser, userController.loadHome);
 user_route.get('/logout', auth.islogin, userController.userLogout);

@@ -2,16 +2,81 @@
 <body>
     <div class="container">
         <h1>Login</h1>
-        <form action="/login" method="post">
+        <form action="/login" method="post" onsubmit="return validateForm();">
             <% if (typeof message !== 'undefined') { %>
                 <div class="message"><%= message %></div>
             <% } %>
-            <input type="email" name="email" placeholder="Enter your email" required>
-            <input type="password" name="password" placeholder="Enter your password" required>
+            <div class="input-grp">
+                <input type="email" id="log-email" name="email" placeholder="Enter your email" onkeyup="validateEmail()" required><br>
+                <span id="email-error" style="color: red;"></span>
+            </div>
+            <div class="input-grp">
+                <input type="password" id="log-password" name="password" placeholder="Enter your password" onkeyup="validatePassword()" required><br>
+                <span id="password-error" style="color: red;"></span>
+            </div>
             <input type="submit" value="Login">
+            <span id="submit-error" style="color: red;"></span>
         </form>
         <div class="links">
             <a href="/register">User Registration</a>
             <a href="/admin">Admin Login</a>
         </div>
     </div>
+
+    <script>
+        var emailError = document.getElementById('email-error');
+        var passwordError = document.getElementById('password-error');
+        var submitError = document.getElementById('submit-error');
+
+        function validateEmail() {
+            var email = document.getElementById('log-email').value.trim(); 
+            if(email.length == 0){
+                emailError.innerHTML = 'Email is required';
+                return false;
+            }
+            if (/\s/.test(email)) {
+                emailError.innerHTML = 'Email should not contain white spaces';
+                return false;
+            }
+            var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if(!email.match(emailPattern)){
+                emailError.innerHTML = 'Please enter a valid email address';
+                return false;
+            }
+            emailError.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            return true; 
+        }
+
+        function validatePassword() {
+            var password = document.getElementById('log-password').value;
+            if (password.length == 0) {
+                passwordError.innerHTML = 'Password is required';
+                return false;
+            }
+            if (!/^\d+$/.test(password)) {
+                passwordError.innerHTML = 'Password must contain only numbers';
+                return false;
+            }
+            if (password.length < 8) {
+                passwordError.innerHTML = 'Password must be at least 8 digits long';
+                return false;
+            }
+            passwordError.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            return true;
+        }
+
+        function validateForm() {
+            var isEmailValid = validateEmail();
+            var isPasswordValid = validatePassword();
+
+            if (!isEmailValid || !isPasswordValid) {
+                submitError.innerHTML = 'Please fix the errors above before submitting';
+                return false;
+            }
+
+            submitError.innerHTML = ''; 
+            return true; 
+        }
+
+    </script>
+</body>

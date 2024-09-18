@@ -5,6 +5,7 @@ const path = require('path');
 const multer = require('multer');
 const config = require('../config/config'); 
 const adminController = require('../controllers/adminController');
+const nocache = require('nocache');
 const auth = require('../middleware/adminAuth');
 
 const admin_route = express();
@@ -16,6 +17,8 @@ admin_route.use(session({
     saveUninitialized: false,
     // cookie: { maxAge: 60000 } 
 }));
+
+admin_route.use(nocache());
 
 // BodyParser configuration
 admin_route.use(bodyParser.json());

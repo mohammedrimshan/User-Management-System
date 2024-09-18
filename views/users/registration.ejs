@@ -1,20 +1,26 @@
 
     <div class="container">
         <h1>User Registration Form</h1>
-        <form action="/register" method="post" enctype="multipart/form-data">
+
+     
+
+        <form id="registration-form" action="/register" method="post" enctype="multipart/form-data" onsubmit="return validateForm();">
             <div class="form-group">
                 <label for="name">Name:</label>
-                <input type="text" id="name" name="name" placeholder="Enter your name" required>
+                <input type="text" id="name" name="name" placeholder="Enter your name" onkeyup="validateName()" required>
+                <span id="name-error"></span>
             </div>
 
             <div class="form-group">
                 <label for="email">Email:</label>
-                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+                <input type="email" id="email" name="email" placeholder="Enter your email" onkeyup="validateEmail()" required>
+                <span id="email-error"></span>
             </div>
 
             <div class="form-group">
                 <label for="mno">Mobile:</label>
-                <input type="text" id="mno" name="mno" placeholder="Enter your mobile number" required>
+                <input type="text" id="mno" name="mno" placeholder="Enter your mobile number" onkeyup="validateMobile()" required>
+                <span id="mobile-error"></span>
             </div>
 
             <div class="form-group">
@@ -24,20 +30,119 @@
 
             <div class="form-group">
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                <input type="password" id="password" name="password" placeholder="Enter your password" onkeyup="validatePassword()" required>
+                <span id="password-error"></span>
             </div>
 
             <div class="form-group">
                 <input type="submit" value="Register">
+                <span id="submit-error"></span>
             </div>
         </form>
-
-        <% if (typeof message !== 'undefined') { %>
-            <p class="message"><%= message %></p>
+        <% if (message) { %>
+            <div class="alert alert-info" style="color: red;">
+                <%= message %>
+            </div>
+            <script>
+                // Remove the query string from the URL after the message is shown
+                if (window.history.replaceState) {
+                    const url = new URL(window.location);
+                    url.searchParams.delete('message'); // Remove 'message' query parameter
+                    window.history.replaceState(null, '', url);
+                }
+            </script>
         <% } %>
-
+        <!-- Link to login page -->
         <p class="login-link">
             Already have an account? <a href="/login">Login here</a>
         </p>
     </div>
 
+
+    <script>
+        function validateName() {
+            var name = document.getElementById('name').value.trim();
+            var nameError = document.getElementById('name-error');
+            if (name.length === 0) {
+                nameError.innerHTML = 'Name is required';
+                return false;
+            }
+            if (/\d/.test(name)) {
+                nameError.innerHTML = 'Name should not contain numbers';
+                return false;
+            }
+            nameError.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            return true;
+        }
+
+        function validateEmail() {
+            var email = document.getElementById('email').value.trim();
+            var emailError = document.getElementById('email-error');
+            if (email.length === 0) {
+                emailError.innerHTML = 'Email is required';
+                return false;
+            }
+            if (/\s/.test(email)) {
+                emailError.innerHTML = 'Email should not contain white spaces';
+                return false;
+            }
+            var emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!email.match(emailPattern)) {
+                emailError.innerHTML = 'Email is invalid';
+                return false;
+            }
+            emailError.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            return true;
+        }
+
+        function validateMobile() {
+            var mobile = document.getElementById('mno').value.trim();
+            var mobileError = document.getElementById('mobile-error');
+            if (mobile.length === 0) {
+                mobileError.innerHTML = 'Mobile number is required';
+                return false;
+            }
+            var mobilePattern = /^[0-9]{10}$/;
+            if (!mobile.match(mobilePattern)) {
+                mobileError.innerHTML = 'Mobile number must be 10 digits long';
+                return false;
+            }
+            mobileError.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            return true;
+        }
+
+        function validatePassword() {
+            var password = document.getElementById('password').value;
+            var passwordError = document.getElementById('password-error');
+            if (password.length === 0) {
+                passwordError.innerHTML = 'Password is required';
+                return false;
+            }
+            if (!/^\d+$/.test(password)) {
+                passwordError.innerHTML = 'Password must contain only numbers';
+                return false;
+            }
+            if (password.length < 8) {
+                passwordError.innerHTML = 'Password must be at least 8 digits long';
+                return false;
+            }
+            passwordError.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            return true;
+        }
+
+        function validateForm() {
+            var isNameValid = validateName();
+            var isEmailValid = validateEmail();
+            var isMobileValid = validateMobile();
+            var isPasswordValid = validatePassword();
+
+            if (!isNameValid || !isEmailValid || !isMobileValid || !isPasswordValid) {
+                document.getElementById('submit-error').innerHTML = 'Please fix the errors above before submitting';
+                return false;
+            }
+
+            document.getElementById('submit-error').innerHTML = '';
+            return true;
+        }
+    </script>
+</body>
